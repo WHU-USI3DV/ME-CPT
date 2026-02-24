@@ -725,7 +725,7 @@ class PointTransformerV3(PointModule):
     def forward(self, data_dict):
 
         point = Point(data_dict)
-  
+
         point.serialization(order=self.order, shuffle_orders=self.shuffle_orders)
         
         

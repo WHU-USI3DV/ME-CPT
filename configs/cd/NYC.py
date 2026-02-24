@@ -6,14 +6,15 @@ num_worker = 0
 mix_prob = 0.8
 empty_cache = False
 enable_=amp = False
-weight ="/home/luqizhang/work/data/checkpoints/NYCSCD/model/model_best.pth" # path to model weight
+#weight ="/home/luqizhang/work/data/checkpoints/NYCSCD/model/model_best.pth" # path to model weight
+weight="/home/luqizhang/work/test/model/model_last.pth"
 save_path="/home/luqizhang/work/data/PTV3TEST"
 
 
 #test_mode
 mask=True
 test_voxel_size=0.5
-test_root="/home/luqizhang/work/data/NYCSCD_public/Test40"
+test_root="/home/luqizhang/work/data/NYCSCD_public/version_training/Test40"
 save_file="/home/luqizhang/work/test"
 test_type="SemSegTester"
 

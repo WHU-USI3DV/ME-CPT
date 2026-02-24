@@ -445,12 +445,12 @@ class CDDatasetNYC(Dataset):
                 vertex1=self.read_from_ply_PC(self.filesPC1[idx])
                 coord0=torch.from_numpy(vertex0[:,:3])
                 coord1 = torch.from_numpy(vertex1[:,:3])
-                rgb0=torch.from_numpy(vertex0[:,3])#rgb -> labelmoni
-                rgb1=torch.from_numpy(vertex1[:,3])
+                label_seg_0=torch.from_numpy(vertex0[:,3])#rgb -> labelmoni
+                label_seg_1=torch.from_numpy(vertex1[:,3])
                 label_cd=torch.from_numpy(vertex1[:,4]).to(dtype=torch.long)
 
-                pc0 = Data(pos=coord0,rgb=rgb0)
-                pc1 = Data(pos=coord1,rgb=rgb1,cd=label_cd)
+                pc0 = Data(pos=coord0,seg=label_seg_0)
+                pc1 = Data(pos=coord1,seg=label_seg_1,cd=label_cd)
     
                 torch.save(pc0, os.path.join(self.pre_dir, 'pc0_{}.pt'.format(idx)))
                 torch.save(pc1, os.path.join(self.pre_dir, 'pc1_{}.pt'.format(idx)))
@@ -530,6 +530,7 @@ class CDDatasetNYC(Dataset):
             vertices[:, 2] = plydata[nameInPly].data["z"]
             vertices[:, 3] = plydata[nameInPly].data["label_mono"]
         return vertices
+
     def getitemrandom(self):
         chosen_label = np.random.choice(self._labels, p=self._label_counts)
         valid_centres = self._centres_for_sampling[self._centres_for_sampling[:, 4] == chosen_label]
@@ -552,12 +553,12 @@ class CDDatasetNYC(Dataset):
         pc1_s=Data()
         indice0 = torch.LongTensor(tree0.query_radius(c_centre, r=self.radius)[0])
         
-        keys0=["pos","rgb"]
+        keys0=["pos","seg"]
         for key in enumerate(keys0):
             item = pc0[key[1]]
             item = item[indice0]
             setattr(pc0_s, key[1], item)
-        keys1=["pos","rgb","cd"]
+        keys1=["pos","seg","cd"]
         indice1 = torch.LongTensor(tree1.query_radius(c_centre, r=self.radius)[0])
         for key in enumerate(keys1):
             item = pc1[key[1]]
@@ -574,8 +575,8 @@ class CDDatasetNYC(Dataset):
 
         c=torch.cat([coord0,coord1],dim=0)
         label_cd_t1=pc1_s.cd
-        rgb0=pc0_s.rgb
-        rgb1=pc1_s.rgb
+        label_seg_0=pc0_s.seg
+        label_seg_1=pc1_s.seg
 
      
         #normalize
@@ -591,9 +592,9 @@ class CDDatasetNYC(Dataset):
     
         if self.voxel_size>0:
             uniq_idx0 = voxelize(coord0.numpy(), self.voxel_size)
-            coord0, rgb0= coord0[uniq_idx0], rgb0[uniq_idx0]
+            coord0, label_seg_0= coord0[uniq_idx0], label_seg_0[uniq_idx0]
             uniq_idx1 = voxelize(coord1.numpy(), self.voxel_size)
-            coord1, rgb1,label_cd_t1= coord1[uniq_idx1], rgb1[uniq_idx1],label_cd_t1[uniq_idx1]
+            coord1, label_seg_1,label_cd_t1= coord1[uniq_idx1], label_seg_1[uniq_idx1],label_cd_t1[uniq_idx1]
  
         #temporal 
 
@@ -606,9 +607,9 @@ class CDDatasetNYC(Dataset):
         ft0=torch.zeros(coord0.shape[0])   
         ft1=torch.ones(coord1.shape[0])   
         ft=torch.cat([ft0,ft1],dim=0).reshape(-1,1)
-        rgb=torch.cat([rgb0,rgb1],dim=0)#semantic
-        mask=rgb>3
-        rgb[mask]=-1
+        label_seg=torch.cat([label_seg_0,label_seg_1],dim=0)#semantic
+        mask=label_seg>3
+        label_seg[mask]=-1
 
 
         featt=torch.cat([coord,ft],dim=1)
@@ -627,7 +628,7 @@ class CDDatasetNYC(Dataset):
         data_dict = dict(
             coord=coord,
             feat=featt, #featt
-            segment=rgb.long(),
+            segment=label_seg.long(),
             segment_cd=segment_cd,
             offset=coord.shape[0],
         )
@@ -640,8 +641,8 @@ class CDDatasetNYC(Dataset):
 
         coord0=torch.from_numpy(vertex0[:,:3])
         coord1 = torch.from_numpy(vertex1[:,:3])
-        rgb0=torch.from_numpy(vertex0[:,3])
-        rgb1=torch.from_numpy(vertex1[:,3])
+        label_seg_0=torch.from_numpy(vertex0[:,3])
+        label_seg_1=torch.from_numpy(vertex1[:,3])
         label_cd_t0= torch.full([coord0.shape[0]],-1)
         label_cd_t1=torch.from_numpy(vertex1[:,4]).to(dtype=torch.long)
 
@@ -659,9 +660,9 @@ class CDDatasetNYC(Dataset):
     
         if self.voxel_size>0:
             uniq_idx0 = voxelize(coord0.numpy(), self.voxel_size)
-            coord0, rgb0,label_cd_t0= coord0[uniq_idx0], rgb0[uniq_idx0],label_cd_t0[uniq_idx0]
+            coord0, label_seg_0,label_cd_t0= coord0[uniq_idx0], label_seg_0[uniq_idx0],label_cd_t0[uniq_idx0]
             uniq_idx1 = voxelize(coord1.numpy(), self.voxel_size)
-            coord1, rgb1,label_cd_t1= coord1[uniq_idx1], rgb1[uniq_idx1],label_cd_t1[uniq_idx1]
+            coord1, label_seg_1,label_cd_t1= coord1[uniq_idx1], label_seg_1[uniq_idx1],label_cd_t1[uniq_idx1]
  
 
         #temporal 
@@ -674,9 +675,9 @@ class CDDatasetNYC(Dataset):
         ft0=torch.zeros(coord0.shape[0])   
         ft1=torch.ones(coord1.shape[0])   
         ft=torch.cat([ft0,ft1],dim=0).reshape(-1,1)
-        rgb=torch.cat([rgb0,rgb1],dim=0)
-        mask=rgb>3
-        rgb[mask]=-1
+        label_seg=torch.cat([label_seg_0,label_seg_1],dim=0)
+        mask=label_seg>3
+        label_seg[mask]=-1
   
         featt=torch.cat([coord,ft],dim=1)
         
@@ -685,11 +686,10 @@ class CDDatasetNYC(Dataset):
         segment_cd[mask]=-1
        
 
-       
         data_dict = dict(
             coord=coord,
             feat=featt, #featt
-            segment=rgb.long(),
+            segment=label_seg.long(),
             segment_cd=segment_cd,
             offset=coord.shape[0],
         )
