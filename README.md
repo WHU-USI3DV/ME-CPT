@@ -87,7 +87,7 @@ For example:
 ```bash
 # Direct
 export PYTHONPATH=./
-python tools/train.py --config-file configs/s configs/cd/Urb3dcd.py --options save_path=./results
+python tools/train.py --config-file configs/cd/Urb3dcd.py --options save_path=./results
 ```
 ### Testing
 The training processing is based on configs in `configs` folder. 
@@ -95,7 +95,7 @@ For example:
 ```bash
 # Direct
 export PYTHONPATH=./
-python tools/test.py --config-file configs/s configs/cd/Urb3dcd.py --options save_path=./results
+python tools/test.py --config-file configs/cd/Urb3dcd.py --options save_path=./results
 ```
 
 ## Acknowledgement
