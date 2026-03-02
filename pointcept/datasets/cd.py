@@ -481,15 +481,16 @@ class CDDatasetNYC(Dataset):
         for dir in globPath:
             if dir.is_dir():
                 curDir = os.scandir(dir) 
-                name=[]
+                pc0_path = None
+                pc1_path = None
                 for f in curDir:
                     if f.name == "pointCloud0.ply":
-                        name.append(f.path)
+                        pc0_path = f.path
                     elif f.name == "pointCloud1.ply":
-                        name.append(f.path)      
-                if(len(name)==2):        
-                    self.filesPC0.append(name[1])
-                    self.filesPC1.append(name[0])
+                        pc1_path = f.path
+                if pc0_path is not None and pc1_path is not None:
+                    self.filesPC0.append(pc0_path)  
+                    self.filesPC1.append(pc1_path)  
                 curDir.close()
         globPath.close()
 
